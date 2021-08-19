@@ -13,14 +13,21 @@ class Player(pygame.sprite.Sprite):
         #------
         temp_list = []
         for i in range(1):
-            img = pygame.image.load(f"./ninja/idle/{i}.png")
+            img = pygame.image.load(f"./assets/ninja/idle/{i}.png")
             img = pygame.transform.scale(img, (70, 64))
             img.set_colorkey(black)
             temp_list.append(img)
         self.animation_list.append(temp_list)
         temp_list = []
         for i in range(3):
-            img = pygame.image.load(f"./ninja/run/{i}.png")
+            img = pygame.image.load(f"./assets/ninja/run/{i}.png")
+            img = pygame.transform.scale(img, (70, 64))
+            img.set_colorkey(black)
+            temp_list.append(img)
+        self.animation_list.append(temp_list)
+        temp_list = []
+        for i in range(1):
+            img = pygame.image.load(f"./assets/ninja/jump/{i}.png")
             img = pygame.transform.scale(img, (70, 64))
             img.set_colorkey(black)
             temp_list.append(img)
@@ -28,40 +35,31 @@ class Player(pygame.sprite.Sprite):
         self.image = self.animation_list[self.action][self.frame_index]
         #------
         #the rest
+        self.direction = 1
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
-        self.width = self.image.get_width() 
-        self.height = self.image.get_height() 
+        self.width = self.image.get_width()
+        self.height = self.image.get_height()
         self.alive = True
-        self.direction = 1
         self.vel_y = 0
         self.jumps = 2
         self.max_jumps = 2
         self.speed = 7
         self.flip = False
-        self.sword_collide = False
-        if self.direction == 1:
-            self.feet_rect = pygame.draw.rect(screen, blue, pygame.Rect(self.rect.x + 20, self.rect.y + 53, 50, 13))
-            self.sword_rect = pygame.draw.rect(screen, blue, pygame.Rect(self.rect.x, self.rect.y + 12, 15, 15))
-        elif self.direction == -1:
-            self.feet_rect = pygame.draw.rect(screen, blue, pygame.Rect(self.rect.x, self.rect.y + 53, 50, 13))
-            self.sword_rect = pygame.draw.rect(screen, blue, pygame.Rect(self.rect.x + 58, self.rect.y + 12, 15, 15))
+        self.in_air = False
 
-    def draw_rects(self):
-        if self.direction == 1:
-            self.feet_rect = pygame.draw.rect(screen, blue, pygame.Rect(self.rect.x + 20, self.rect.y + 53, 50, 13))
-            self.sword_rect = pygame.draw.rect(screen, blue, pygame.Rect(self.rect.x, self.rect.y + 12, 15, 15))
-        elif self.direction == -1:
-            self.feet_rect = pygame.draw.rect(screen, blue, pygame.Rect(self.rect.x, self.rect.y + 53, 50, 13))
-            self.sword_rect = pygame.draw.rect(screen, blue, pygame.Rect(self.rect.x + 58, self.rect.y + 12, 15, 15))
+
 
     def attempt_jump(self):
         if self.jumps:
             self.jumps -= 1
             self.vel_y = -25
+            self.in_air = True
+
 
     def move(self, moving_left, moving_right, world):
+        global run
         dx = 0
         dy = 0
 
@@ -80,33 +78,33 @@ class Player(pygame.sprite.Sprite):
             self.vel_y = 10
         dy += self.vel_y
 
-        if self.rect.bottom > 650:
-            self.rect.bottom = 650
+        if self.rect.bottom > 1700:
+            self.rect.bottom = 1700
+            self.alive = False
+            self.update_action(0)
 
 
 
         #collsions 'n shit
         for tile in world.tile_list:
-            #check if collides with sword
-            if tile[1].colliderect(self.sword_rect):
-                self.sword_collide = True
-
             #collisions in the x direction
-            if tile[1].colliderect(self.rect.x + dx, self.rect.y, self.width, self.height) and self.sword_collide == False:
+            if tile[1].colliderect(self.rect.x + dx, self.rect.y, self.width, self.height):
                 dx = 0
-                self.update_action(0)
+                if self.in_air == False:
+                    self.update_action(0)
 
-            #collsion in y direction
-            if tile[1].colliderect(self.feet_rect):
-                #check if above the ground
-                if self.vel_y >= 0:
-                    dy = tile[1].top - self.rect.bottom
-                    self.jumps = self.max_jumps
+            #collision in the y direction    
             if tile[1].colliderect(self.rect.x, self.rect.y + dy, self.width, self.height):
                 #check if below the ground
                 if self.vel_y < 0:
                     dy = tile[1].bottom - self.rect.top
                     self.vel_y = 0
+                #check if above the ground
+                elif self.vel_y >= 0:
+                    dy = tile[1].top - self.rect.bottom
+                    self.jumps = self.max_jumps
+                    self.in_air = False
+
 
 
         #update positions
@@ -133,4 +131,4 @@ class Player(pygame.sprite.Sprite):
         
     def draw(self):
         new_img = (pygame.transform.flip(self.image, self.flip, False))
-        screen.blit(new_img, (self.rect.x, self.rect.y))
+        screen.blit(new_img, (self.rect.x - scroll[0], self.rect.y - scroll[1]))

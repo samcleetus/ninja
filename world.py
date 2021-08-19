@@ -82,4 +82,5 @@ class World():
         for tile in self.tile_list:
             img = tile[0]
             rect = tile[1]
-            screen.blit(img, rect)
+            screen.blit(img, (rect.x - int(scroll[0]), rect.y - int(scroll[1])))
+

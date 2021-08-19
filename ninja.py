@@ -40,7 +40,7 @@ run = True
 while run:
     clock.tick(fps)
 
-    #player.draw_rects()
+    player.draw_rects()
     screen.fill(dark_blue)
     screen.blit(moon_img, (900, 20))
 
@@ -48,7 +48,6 @@ while run:
 
     player.update_animation()
     player.draw()
-    player.draw_rects()
 
     #update player actions
     if player.alive:
